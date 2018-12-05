@@ -87,14 +87,14 @@ class transactiontype:
                     elif resptime > 0 and trans:
                         #search for last matching number with trans, user, resptime=-1, iteration, vuser, extra and adjust the resptime                
 
-                        print ("scanning for: trans=%s user=%s resptime=-1 iteration=%s vuser=%s extra=%s" % (trans, user, iteration, vuser, extra))
+                        #print ("scanning for: trans=%s user=%s resptime=-1 iteration=%s vuser=%s extra=%s" % (trans, user, iteration, vuser, extra))
 
                         for transaction in reversed(transactions):
                             # verify if this is the same transaction
-                            print ("    current: trans=%s user=%s resptime=-1 iteration=%s vuser=%s extra=%s" % (transaction.trans, transaction.user, transaction.iteration, transaction.vuser, transaction.extra))
+                            #print ("    current: trans=%s user=%s resptime=-1 iteration=%s vuser=%s extra=%s" % (transaction.trans, transaction.user, transaction.iteration, transaction.vuser, transaction.extra))
                             if transaction.trans == trans and transaction.user == user and transaction.resptime == -1 and transaction.iteration == iteration and transaction.vuser == vuser and transaction.extra == extra and transaction.type == typetransaction:
-                                print("        Last transaction: name=%s, resptime=%s, epoch=%s" % (transaction.trans, transaction.resptime, transaction.starttime_epoch))
-                                print("        Current transaction: name=%s, resptime=%s, epoch=%s" % (trans, resptime, epoch))
+                                #print("        Last transaction: name=%s, resptime=%s, epoch=%s" % (transaction.trans, transaction.resptime, transaction.starttime_epoch))
+                                #print("        Current transaction: name=%s, resptime=%s, epoch=%s" % (trans, resptime, epoch))
                                 transaction.resptime = resptime
                                 transaction.stoptime_epoch = epoch
                                 transaction.status = status
@@ -109,30 +109,30 @@ class transactiontype:
         c = conn.cursor()
 
         if dropdatabase:
-            c.execute('drop table if exists transactions;')
+            c.execute('DROP TABLE IF EXISTS transactions;')
 
         # setup the database with all default tables
-        c.execute('create table if not exists transactions(id INTEGER PRIMARY KEY ,name varchar(40), type varchar(10), starttime_epoch REAL, stoptime_epoch REAL, responsetime REAL, user, status, iteration INTEGER, vuser, extra, error)')
+        c.execute('CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY ,name varchar(40), type varchar(10), starttime_epoch REAL, stoptime_epoch REAL, responsetime REAL, user, status, iteration INTEGER, vuser, extra, error)')
 
         # setup the database with all default views
-        c.execute("CREATE VIEW IF NOT EXISTS _summary AS select name,percentile(responsetime, 95) as percentile95, avg(responsetime) as avg , max(responsetime) as max , min(responsetime) as min, count(responsetime) as count from transactions where type='transaction'  and responsetime > -1  group by name order by avg desc;")
+        c.execute("CREATE VIEW IF NOT EXISTS _summary AS select name,percentile(responsetime, 95) as percentile95, avg(responsetime) as avg , max(responsetime) as max , min(responsetime) as min, count(responsetime) as count from alltransactions where type='transaction'  and responsetime > -1  group by name order by avg desc;")
         c.execute("CREATE VIEW IF NOT EXISTS alltransactions as select id, name, type, datetime(starttime_epoch, 'unixepoch', 'localtime') as starttime,starttime_epoch, datetime(stoptime_epoch, 'unixepoch', 'localtime') as stoptime,stoptime_epoch,responsetime,user,status,iteration,vuser,extra from transactions;");
         c.execute("CREATE VIEW IF NOT EXISTS _faulty_transactions as select * from alltransactions where responsetime = -1;");
         # create view for calculating responsetime	
         c.execute("CREATE VIEW IF NOT EXISTS _calculatedresponsetime as select *, [stoptime_epoch] - [starttime_epoch] as responsetimecalc from alltransactions;");
         # create summary view with calculated responsetimes for using with LR 12.55 with TruClient Chromium - this version is not reporting response times in Javascript
         c.execute("create view if not exists _summarycalculated as select name,percentile(responsetimecalc, 95) as percentile95, avg(responsetimecalc) as avg , max(responsetimecalc) as max , min(responsetimecalc) as min, count(responsetimecalc) as count from _calculatedresponsetime where type='transaction'  and responsetime > -1  group by name order by avg desc;");
-        c.execute("CREATE VIEW IF NOT EXISTS passed_failed_actions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case     when responsetime > -1 then 'Passed'    else null    end    )as Passed from transactions where type='action' group by name;");
-        c.execute("CREATE VIEW IF NOT EXISTS passed_failed_transactions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case when responsetime > -1 then 'Passed'    else null    end    )as Passed from transactions where type='transaction' group by name;");
-        c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_actions AS select name, vuser, responsetime from transactions where  type ='action' group by vuser, name order by vuser, starttime;");
-        c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_vuser as select vuser, sum(responsetime) as responsetime from transactions where type = 'transaction' group by vuser;");
-        c.execute("CREATE VIEW IF NOT EXISTS testduration as select datetime(min(starttime_epoch), 'unixepoch', 'localtime') as starttimetest, datetime(max(stoptime_epoch), 'unixepoch', 'localtime') as stoptimetest, max(stoptime_epoch) - min(starttime_epoch) as duration_seconds, (max(stoptime_epoch) - min(starttime_epoch)) / 60 as duration_minutes from transactions;");
+        c.execute("CREATE VIEW IF NOT EXISTS passed_failed_actions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case     when responsetime > -1 then 'Passed'    else null    end    )as Passed from alltransactions where type='action' group by name;");
+        c.execute("CREATE VIEW IF NOT EXISTS passed_failed_transactions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case when responsetime > -1 then 'Passed'    else null    end    )as Passed from alltransactions where type='transaction' group by name;");
+        c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_actions AS select name, vuser, responsetime from alltransactions where  type ='action' group by vuser, name order by vuser, starttime;");
+        c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_vuser as select vuser, sum(responsetime) as responsetime from alltransactions where type = 'transaction' group by vuser;");
+        c.execute("CREATE VIEW IF NOT EXISTS testduration as select datetime(min(starttime_epoch), 'unixepoch', 'localtime') as starttimetest, datetime(max(stoptime_epoch), 'unixepoch', 'localtime') as stoptimetest, max(stoptime_epoch) - min(starttime_epoch) as duration_seconds, (max(stoptime_epoch) - min(starttime_epoch)) / 60 as duration_minutes from alltransactions;");
 
         c.execute("CREATE INDEX UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)");
 
         # insert all the transactions into the database
         for transaction in self:            
-            print ("SQLite: %s" % (transaction.SqLite()))
+            #print ("SQLite: %s" % (transaction.SqLite()))
             c.execute(transaction.SqLite())
             
         # Save (commit) the changes
