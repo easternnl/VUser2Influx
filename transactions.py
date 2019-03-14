@@ -35,7 +35,7 @@ def isinteger(value):
 class transactiontype:
     count = 0
 
-    def __init__(self, starttime_epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction):
+    def __init__(self, starttime_epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache):
         self.starttime_epoch = starttime_epoch
         self.stoptime_epoch = stoptime_epoch
         self.trans = trans
@@ -46,6 +46,7 @@ class transactiontype:
         self.vuser = vuser
         self.extra = extra
         self.type = typetransaction
+        self.cache = cache
 
         transactiontype.count += 1
 
@@ -112,10 +113,11 @@ class transactiontype:
                         extra = "Tikker"
                         typetransaction = "transaction"
                         stoptime_epoch = epoch + (resptime * 1000 * 1000 * 1000 )
+                        cache = 0
                         
                         print("Name: %s, Responsetime: %s, Starttime: %f" % (tikker.group(5), tikker.group(4), epoch))
 
-                        transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction))
+                        transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
 
 
 
@@ -138,9 +140,13 @@ class transactiontype:
             for row in c.execute('SELECT timestamp, name, duration, status FROM Transactions'):
                 #print (row)
                 # create all variabeles
-                epoch = datetime.strptime(row[0], '%Y-%m-%dT%H:%M:%S.%f').timestamp() * 1000 * 1000 * 1000  
+                if '.' in row[0]:
+                    epoch = datetime.strptime(row[0], '%Y-%m-%dT%H:%M:%S.%f').timestamp() * 1000 * 1000 * 1000  
+                else:
+                    epoch = datetime.strptime(row[0], '%Y-%m-%dT%H:%M:%S').timestamp() * 1000 * 1000 * 1000  
+
                 trans = row[1]
-                user = " "
+                user = ""
                 resptime = row[2] / 1000
                 if row[3] == "Passed":
                     status = 2
@@ -150,9 +156,11 @@ class transactiontype:
                 vuser = -1
                 extra = ""
                 typetransaction = "transaction"
-                stoptime_epoch = epoch + (resptime * 1000 * 1000 * 1000 )
+                stoptime_epoch = epoch
+                starttime_epoch = epoch - (resptime * 1000 * 1000 * 1000)
+                cache = 0
 
-                transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction))
+                transactions.append(transactiontype(starttime_epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
 
             conn.close()
 
@@ -177,6 +185,7 @@ class transactiontype:
                     vuser = 0
                     extra = ""
                     typetransaction = "transaction"
+                    cache = 0
                     
                     # search for an epoch timestamp in the file
                     #epoch = re.search(r'([0-9]{10,13})', line)
@@ -208,12 +217,18 @@ class transactiontype:
                                 resptime = float(value)
                             elif key == "status":
                                 status = value
+                                if (status == "Passed"):
+                                    status = 2
+                                elif (status == "Auto"):
+                                    status = 2
                             elif key == "iteration":
                                 iteration = float(value)
                             elif key == "vuser":
                                 vuser = float(value)
                             elif key == "extra":
                                 extra = value
+                            elif key == "cache":
+                                cache = int(value)
                             
                             #print("%s=%s" % (key, value))
 
@@ -223,7 +238,7 @@ class transactiontype:
                             # print("OPEN epoch=%d trans=%s user=%s resptime=%s status=%s iteration=%s vuser=%s extra=%s" % (epoch, trans, user, resptime, status, iteration, vuser, extra))
                             #print("OPEN epoch=%d trans=%s user=%s resptime=%f status=%s iteration=%s vuser=%s extra=%s" % (epoch, trans, user, resptime, status, iteration, vuser, extra))
 
-                            transactions.append(transactiontype(epoch, 0, trans, user, resptime, status, iteration, vuser, extra, typetransaction))
+                            transactions.append(transactiontype(epoch, 0, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
                                                         
                             
                         elif resptime > 0 and trans:
@@ -278,23 +293,25 @@ class transactiontype:
             c.execute('DROP TABLE IF EXISTS transactions;')
 
         # setup the database with all default tables
-        c.execute('CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY ,name varchar(40), type varchar(10), starttime_epoch REAL, stoptime_epoch REAL, responsetime REAL, user, status, iteration INTEGER, vuser, extra, error)')
+        c.execute('CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY ,name varchar(40), type varchar(10), starttime_epoch REAL, stoptime_epoch REAL, responsetime REAL, user, status, iteration INTEGER, cache INTEGER, vuser, extra, error)')
 
         # setup the database with all default views
         c.execute("CREATE VIEW IF NOT EXISTS _summary AS select name,percentile(responsetime, 95) as percentile95, avg(responsetime) as avg , max(responsetime) as max , min(responsetime) as min, count(responsetime) as count from alltransactions where type='transaction'  and responsetime > -1  group by name order by avg desc;")
-        c.execute("CREATE VIEW IF NOT EXISTS alltransactions as select id, name, type, datetime(starttime_epoch, 'unixepoch', 'localtime') as starttime,starttime_epoch, datetime(stoptime_epoch, 'unixepoch', 'localtime') as stoptime,stoptime_epoch,responsetime,user,status,iteration,vuser,extra from transactions;")
+        c.execute("CREATE VIEW IF NOT EXISTS alltransactions as select id, name, type, datetime(starttime_epoch, 'unixepoch', 'localtime') as starttime,starttime_epoch, datetime(stoptime_epoch, 'unixepoch', 'localtime') as stoptime,stoptime_epoch,responsetime,user,status,iteration,vuser,cache,extra from transactions;")
         c.execute("CREATE VIEW IF NOT EXISTS _faulty_transactions as select * from alltransactions where responsetime = -1;")
         # create view for calculating responsetime	
         c.execute("CREATE VIEW IF NOT EXISTS _calculatedresponsetime as select *, printf('%.3f', [stoptime_epoch] - [starttime_epoch])  as responsetimecalc from alltransactions;")
         # create summary view with calculated responsetimes for using with LR 12.55 with TruClient Chromium - this version is not reporting response times in Javascript
-        c.execute("create view if not exists _summarycalculated as select name,percentile(responsetimecalc, 95) as percentile95, avg(responsetimecalc) as avg , max(responsetimecalc) as max , min(responsetimecalc) as min, count(responsetimecalc) as count from _calculatedresponsetime where type='transaction'  and responsetime > -1  group by name order by avg desc;")
+        c.execute("CREATE VIEW IF NOT EXISTS _summarycalculated as select name,percentile(responsetimecalc, 95) as percentile95, avg(responsetimecalc) as avg , max(responsetimecalc) as max , min(responsetimecalc) as min, count(responsetimecalc) as count from _calculatedresponsetime where type='transaction'  and responsetime > -1  group by name order by avg desc;")
         c.execute("CREATE VIEW IF NOT EXISTS passed_failed_actions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case     when responsetime > -1 then 'Passed'    else null    end    )as Passed from alltransactions where type='action' group by name;")
         c.execute("CREATE VIEW IF NOT EXISTS passed_failed_transactions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case when responsetime > -1 then 'Passed'    else null    end    )as Passed from alltransactions where type='transaction' group by name;")
         c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_actions AS select name, vuser, responsetime from alltransactions where  type ='action' group by vuser, name order by vuser, starttime;")
         c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_vuser as select vuser, sum(responsetime) as responsetime from alltransactions where type = 'transaction' group by vuser;")
         c.execute("CREATE VIEW IF NOT EXISTS testduration as select datetime(min(starttime_epoch), 'unixepoch', 'localtime') as starttimetest, datetime(max(stoptime_epoch), 'unixepoch', 'localtime') as stoptimetest, max(stoptime_epoch) - min(starttime_epoch) as duration_seconds, (max(stoptime_epoch) - min(starttime_epoch)) / 60 as duration_minutes from alltransactions;")
 
-        c.execute("CREATE INDEX UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)")
+        c.execute("CREATE VIEW IF NOT EXISTS _summary_cache AS select name,case cache when 1 then \"cached\" else \"1stvisit\" end as cache ,percentile(responsetime, 90) as percentile90, avg(responsetime) as avg , max(responsetime) as max , min(responsetime) as min, count(responsetime) as count from alltransactions where type='transaction'  and responsetime > -1  group by name,cache order by name,cache desc;")
+
+        c.execute("CREATE INDEX IF NOT EXISTS UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)")
 
         # insert all the transactions into the database
         for transaction in self:            
@@ -362,7 +379,7 @@ class transactiontype:
 
     def SqLite(self):
         # return SQL insert statement for the current transaction
-        return "INSERT INTO Transactions( name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, status, vuser, extra) VALUES ('%s', '%s', %.3f, %.3f,  %.3f, '%s', %d, '%s', %d, '%s');" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.status, self.vuser, self.extra)
+        return "INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra) VALUES ('%s', '%s', %.3f, %.3f,  %.3f, '%s', %d, %d, '%s', %d, '%s');" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
 
     def CSV(self, header):
         # return CSV values for current transaction
@@ -370,7 +387,7 @@ class transactiontype:
             return "name,type,starttime_epoch,stoptime_epoch,responsetime,user,iteration,status,vuser,extra\n"
         else:
             # name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, status, vuser, extra
-            return "%s,%s,%.3f,%.3f,%.3f,%s,%d,%s,%d,%s\n" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch / 1000000000 , self.resptime, self.user, self.iteration, self.status, self.vuser, self.extra)
+            return "%s,%s,%.3f,%.3f,%.3f,%s,%d,%d,%s,%d,%s\n" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch / 1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
     
     def InfluxDbLine(self):
         # return the InfluxDb Line statement for the current transaction        
@@ -387,6 +404,8 @@ class transactiontype:
             datapoint += ",status=%s" % (self.status)
         if self.iteration:
             datapoint += ",iteration=%d" % (self.iteration)
+        #if self.cache:
+        datapoint += ",cache=%d" % (self.cache)
 
         datapoint += " resptime=%.6f" % (self.resptime)
         datapoint += " %d" % (self.starttime_epoch)
