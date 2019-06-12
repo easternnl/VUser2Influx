@@ -8,13 +8,7 @@ The following formats are available for importing. New ones will follow up on re
 - Truweb SQLite DB
 - Tikker (http://www.1202performance.com/tools/tikker-the-performance-engineers-stopwatch/)
 - JMeter JTL logfiles
-
-### Example of VUser logs
-todo
-
-### Example of Tikker Log
-todo
-    
+   
 ## Export formats
 Output can be send to the following systems:
 
