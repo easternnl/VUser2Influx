@@ -106,9 +106,10 @@ class transactiontype:
                     else:
                         status = 0                        
                     user = ""                   
-                    iteration = 0
-                    #vuser = jmeter[5]
-                    vuser = 0
+                    iteration = 0                    
+                    vuser = re.search(r'-([0-9]+)', jmeter[5])
+                    vuser = int(vuser.group(1))
+                    print(vuser)
                     extra = ""
                     typetransaction = "transaction"
                     cache = 0
