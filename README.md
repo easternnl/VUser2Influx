@@ -1,4 +1,4 @@
-# Import tool for performance testing
+# Import tool for performance testing logs
 This tool can help you with importing performance testing logs into several database for futher analysis.
 
 ## Import formats
@@ -16,7 +16,7 @@ Output can be send to the following systems:
 - CSV
 - SQLite3
 
-# Commandline reference
+## Commandline reference
 ```
 usage: VUser2Influx.py [-h] --filename FILENAME [--csv CSV] [--sqlite SQLITE]
                        [--dbhost DBHOST] [--dbport DBPORT] [--dbname DBNAME]
@@ -34,3 +34,11 @@ usage: VUser2Influx.py [-h] --filename FILENAME [--csv CSV] [--sqlite SQLITE]
 - --dbdrop Drop/clear the database before writing data into it (works with SQLite and Influx)
 - --batchsize How many records to drop into the Influx database at once - default: 20000
 - --verbose Extra information during processing
+
+## Commandline examples
+```
+python VUser2Influx.py --filename resultfile_100_vusers.jtl --sqlite test.db3 --dbdrop 1
+```
+
+Imports the file resultfile_100_vusers.jtl into test.db3 and drop the database before importing
+
