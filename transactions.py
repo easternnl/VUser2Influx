@@ -70,15 +70,50 @@ class transactiontype:
 
                 transactions += transactiontype.VUserLog(filename)
             elif extension == ".jtl":
-                print ("JMeter results - not enabled yet")
-            elif extension == ".tikker":
-                print ("Tikker results - not enabled yet")
+                print ("JMeter results - not finished yet (work in progress)")
+
+                transactions += transactiontype.JMeterLog(filename)
+            elif extension == ".tikker":               
 
                 transactions += transactiontype.TikkerLog(filename)
             elif extension == ".db" or extension == ".db3":
                 #print ("SQLite for Truweb")
 
                 transactions += transactiontype.TruwebLog(filename)
+
+        return transactions
+
+    def JMeterLog(inputfilter):
+        transactions = []
+
+        for filename in glob.glob(inputfilter):
+            print("Importing JMeter: %s" % (filename))
+
+            with open(filename) as fp:  
+                next(fp)
+                for cnt, line in enumerate(fp):
+                    jmeter = line.split(',')    
+
+                    epoch = float(jmeter[0]) * 1000 * 1000 
+                    stoptime_epoch = epoch + (float(jmeter[1]) * 1000 * 1000 )
+                    #stoptime_epoch = 0
+                    trans = jmeter[2]
+                    user = ""
+                    resptime = float(float(jmeter[1]) / 1000)
+                    
+                    if jmeter[7] == "true":
+                        status = 2
+                    else:
+                        status = 0                        
+                    user = ""                   
+                    iteration = 0
+                    #vuser = jmeter[5]
+                    vuser = 0
+                    extra = ""
+                    typetransaction = "transaction"
+                    cache = 0
+
+                    transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
 
         return transactions
 
