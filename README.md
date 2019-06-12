@@ -1,16 +1,11 @@
-Import performance testing logs with the following format:
-..* VUser logs, basically key+value with 
-..* Truweb SQLite DB
-..* Tikker
+#Import performance testing logs with the following format:
+- VUser logs, basically key+value 
+- Truweb SQLite DB
+- Tikker
+- JMeter JTL logfiles
     
-Into the following formats for further analysis or reporting:
-    - InfluxDb
-    - CSV
-    - SQLite3
+#Into the following formats for further analysis or reporting:
+- InfluxDb
+- CSV
+- SQLite3
 
-
-Still under development, not ready 100% yet.
-
-Todo:
-    - Importing JTL files of JMeter
-    - Readme / help file (and learn MD format :) )
