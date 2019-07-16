@@ -46,3 +46,5 @@ python VUser2Influx.py --filename resultfile_100_vusers.jtl --sqlite test.db3 --
 
 Imports the file resultfile_100_vusers.jtl into test.db3 and drop the database before importing
 
+
+
