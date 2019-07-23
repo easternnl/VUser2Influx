@@ -28,16 +28,16 @@ usage: VUser2Influx.py [-h] --filename FILENAME [--csv CSV] [--sqlite SQLITE]
                        [--verbose VERBOSE]
 ```
                        
-- -h Shows the help
-- --filename The filenames to import, wildcard supported
-- --csv output the data read from the files to a CSV file
-- --sqlite output the data read from the files to a SQLite database
-- --dbhost Hostname of the Influx database
-- --dbport Port of the Influx database
-- --dbname The Influx database name
-- --dbdrop Drop/clear the database before writing data into it (works with SQLite and Influx)
-- --batchsize How many records to drop into the Influx database at once - default: 20000
-- --verbose Extra information during processing
+      -h Shows the help
+      --filename The filenames to import, wildcard supported
+      --csv output the data read from the files to a CSV file
+      --sqlite output the data read from the files to a SQLite database
+      --dbhost Hostname of the Influx database
+      --dbport Port of the Influx database
+      --dbname The Influx database name
+      --dbdrop Drop/clear the database before writing data into it (works with SQLite and Influx)
+      --batchsize How many records to drop into the Influx database at once - default: 20000
+      --verbose Extra information during processing
 
 ## Commandline examples
 ```
