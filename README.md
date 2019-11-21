@@ -7,13 +7,14 @@ The following formats are available for importing. New ones will follow up on re
 - VUser logs, basically key+value 
 - Truweb SQLite DB
 - Tikker (http://www.1202performance.com/tools/tikker-the-performance-engineers-stopwatch/)
-- JMeter JTL logfiles
+- JMeter JTL logfiles (not finished yet)
    
 ## Export formats
 Output can be send to the following systems:
 
 - InfluxDb
 - CSV
+- STT
 - SQLite3
 
 Database fields etc will all be created automatically
@@ -22,7 +23,7 @@ Database fields etc will all be created automatically
 
 ## Commandline reference
 ```
-usage: VUser2Influx.py [-h] --filename FILENAME [--csv CSV] [--sqlite SQLITE]
+usage: VUser2Influx.py [-h] --filename FILENAME [--csv CSV] [--stt STT] [--sqlite SQLITE]
                        [--dbhost DBHOST] [--dbport DBPORT] [--dbname DBNAME]
                        [--dbdrop DBDROP] [--batchsize BATCHSIZE]
                        [--verbose VERBOSE]
@@ -31,6 +32,7 @@ usage: VUser2Influx.py [-h] --filename FILENAME [--csv CSV] [--sqlite SQLITE]
       -h Shows the help
       --filename The filenames to import, wildcard supported
       --csv output the data read from the files to a CSV file
+      --stt STT file to write output to (STT is used by Wessel for his analysis tool)
       --sqlite output the data read from the files to a SQLite database
       --dbhost Hostname of the Influx database
       --dbport Port of the Influx database
