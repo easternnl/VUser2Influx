@@ -316,7 +316,19 @@ class transactiontype:
             #print ("SQLite: %s" % (transaction.SqLite()))
             f.write(transaction.CSV(header=0))            
 
-    def Send2SQLite(self, filename, dropdatabase):
+    def Send2STT(self, filename):
+        # insert all the transactions into the CSV file
+
+        print("Send2STT: %s" % (filename))
+
+        f = open(filename, "w")
+
+        # print detailed transaction information
+        for transaction in self:            
+            #print ("SQLite: %s" % (transaction.SqLite()))
+            f.write(transaction.STT(header=0))            
+
+def Send2SQLite(self, filename, dropdatabase):
         # insert all the transactions into the SQLite database
         print("Send2SQLite: %s" % (filename))
 
@@ -425,6 +437,18 @@ class transactiontype:
             # name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, status, vuser, extra
             return "%s,%s,%.3f,%.3f,%.3f,%s,%d,%d,%s,%d,%s\n" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch / 1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
     
+    def STT(self, header):
+        # return STTX values for current transaction
+        if (header == 1):
+            return "# header not used in this file format\n#2019-10-04	13:45:00	14:05:00		ExtraAnalyse	1	OK\n"
+        else:
+            # epoch \t starttime epoch \t stoptime epoch \t responsetime \t transactionname \t num of transactions \t status (OK or ) \t ???? \n
+            #return "%s,%s,%.3f,%.3f,%.3f,%s,%d,%d,%s,%d,%s\n" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch / 1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
+            if self.resptime > -1:
+                return "epoch\t%d\t%d\t\t%s\t%d\t%s\t\n" % (self.starttime_epoch / 1000000, self.stoptime_epoch / 1000000, self.trans, 1, "OK")
+            else:
+                return ""
+
     def InfluxDbLine(self):
         # return the InfluxDb Line statement for the current transaction        
 

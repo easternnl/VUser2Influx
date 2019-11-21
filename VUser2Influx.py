@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--filename', help='VUser logfile to process - wildcard possible', required=True)
 parser.add_argument('--csv', help='CSV file to write output to')
+parser.add_argument('--stt', help='STT file to write output to')
 parser.add_argument('--sqlite', help='SQLite file to write output to')
 parser.add_argument('--dbhost', default="localhost", help='InfluxDb hostname or ip')
 parser.add_argument('--dbport', default="8086", help='InfluxDb port number')
@@ -64,6 +65,10 @@ if (args.sqlite):
 if (args.csv):
     # export to CSV
     transclass.transactiontype.Send2CSV(transactions, args.csv)
+
+if (args.stt):
+    # export to CSV
+    transclass.transactiontype.Send2STT(transactions, args.stt)
                    
 
 
