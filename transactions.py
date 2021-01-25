@@ -38,7 +38,7 @@ def isinteger(value):
 class transactiontype:
     count = 0
 
-    def __init__(self, starttime_epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache):
+    def __init__(self, starttime_epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache, URL, response, runningvusers):
         self.starttime_epoch = starttime_epoch
         self.stoptime_epoch = stoptime_epoch
         self.trans = trans
@@ -50,6 +50,10 @@ class transactiontype:
         self.extra = extra
         self.type = typetransaction
         self.cache = cache
+        # added to new database on [2021-01-25 21:29:33 erik] 
+        self.URL = URL 
+        self.response - response
+        self.runningvusers = runningvusers
 
         transactiontype.count += 1
 
@@ -68,7 +72,7 @@ class transactiontype:
             #print("Extension: %s" % (extension))
 
             if extension == ".log" or extension == ".txt":
-                #print ("VUser log")
+                print ("VUser log")
 
                 transactions += transactiontype.VUserLog(filename)
             elif extension == ".jtl":
@@ -90,12 +94,122 @@ class transactiontype:
         transactions = []
 
         for filename in glob.glob(inputfilter):
-            print("Importing JMeter: %s" % (filename))
+            print("Importing JMeter with csv: %s" % (filename))
+
+           
 
             with open(filename) as fp:  
-                next(fp)
-                for cnt, line in enumerate(fp):
-                    jmeter = line.split(',')    
+                jtls = csv.DictReader(fp, delimiter=',', quotechar='"')
+
+                # scan header for exist the following headers
+
+                for jtl in jtls: # process line by line
+
+                    # reset all values
+                    starttime_epoch=0
+                    stoptime_epoch=0
+                    trans=""
+                    user=""
+                    resptime=0
+                    status=""
+                    iteration=""
+                    vuser=""
+                    extra=""
+                    typetransaction=""
+                    cache=""
+                    URL=""
+                    response=""
+                    runningvusers=""
+
+                    for header in jtls.fieldnames: # walk through all columns in the line
+                        # default headers in JMeter are:
+                        #  timeStamp,
+                        #  elapsed,
+                        #  label,
+                        #  responseCode,
+                        #  responseMessage,
+                        #  threadName,
+                        #  dataType,
+                        #  success,
+                        #  failureMessage,
+                        #  bytes,
+                        #  sentBytes,
+                        #  grpThreads,
+                        #  allThreads,
+                        #  URL,
+                        #  Latency,
+                        #  IdleTime,
+                        #  Connect
+                        #
+                        if header = "timeStamp":
+                            starttime_epoch=float(jtl[header]) * 1000 * 1000
+                        elif header = "elapsed":
+                            # double calculation
+                            starttime_epoch = epoch + (float(jtl[header]) * 1000 * 1000 )
+                            resptime = float(float(jtl[header]) / 1000)
+                        elif header = "label":
+                            trans = jtl[header]
+                        elif header = "responseCode":
+                            if jtl[] 
+                        elif header = "responseMessage":
+                            response = jtl[header]
+                        elif header = "threadName":
+                            vuser = jtl[header]
+                        elif header = "dataType":
+                            # skip
+                        elif header = "success":
+                            # status is converted from old LoadRunner starterd
+                            if jtl[header] == "true":
+                                status = 2
+                            else:
+                                status = 0
+                        elif header = "failureMessage":
+                            error = jtl[header]
+                        elif header = "bytes":
+                            # skip
+                        elif header = "sentBytes":
+                            # skip
+                        elif header = "grpThreads":
+                            # skip
+                        elif header = "allThreads":
+                            runningvusers = jtl[header]
+                        elif header = "URL":
+                            URL = jtl[header]
+                        elif header = "Latency":
+                            # skip
+                        elif header = "IdleTime":
+                            # skip
+                        elif header = "Connect":
+                            # skip
+                        else:
+                            print("Unknown header %s" % (header))
+
+                        
+                        
+                            
+                    #transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
+                    # multi line append ;-)
+                    transactions.append(transactiontype(
+                        starttime_epoch=epoch,
+                        stoptime_epoch=stoptime_epoch,
+                        trans=,
+                        user=,
+                        resptime=,
+                        status=,
+                        iteration=,
+                        vuser=,
+                        extra=,
+                        typetransaction=,
+                        cache=,
+                        URL=,
+                        response=,
+                        runningvusers=
+                    ))
+
+        return transactions
+                    
+                
+                 
 
                     epoch = float(jmeter[0]) * 1000 * 1000 
                     stoptime_epoch = epoch + (float(jmeter[1]) * 1000 * 1000 )
