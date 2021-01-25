@@ -5,6 +5,9 @@ from datetime import datetime
 import operator # use for sorting arrays
 import glob # used for walking through directories
 import os
+import sqlite3
+
+import csv
 from pytz import timezone
 from influxdb import InfluxDBClient
 from datetime import timedelta
@@ -54,8 +57,7 @@ class transactiontype:
         # handle the import of an file based on the extension specified
 
         # not working yet due to incorrent self assignment
-        import os
-
+        
         transactions = []
 
         for filename in glob.glob(inputfilter):
@@ -84,6 +86,7 @@ class transactiontype:
         return transactions
 
     def JMeterLog(inputfilter):
+        
         transactions = []
 
         for filename in glob.glob(inputfilter):
@@ -163,8 +166,7 @@ class transactiontype:
         
         
     def TruwebLog(inputfilter):
-        import sqlite3
-
+        
         transactions = []
 
         for filename in glob.glob(inputfilter):
@@ -332,8 +334,7 @@ def Send2SQLite(self, filename, dropdatabase):
         # insert all the transactions into the SQLite database
         print("Send2SQLite: %s" % (filename))
 
-        import sqlite3
-
+        
         conn = sqlite3.connect(filename)
         c = conn.cursor()
 
