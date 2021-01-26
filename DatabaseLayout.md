@@ -1,5 +1,7 @@
 # Database layout
 
+The SQLite database has the following layout.
+
 id INTEGER PRIMARY KEY  
 name VARCHAR(40)  
 starttime_epoch REAL  
@@ -24,6 +26,8 @@ CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY ,name varchar(40)
 # File Layouts with mapping to database
 
 ## JTL
+
+First name is the JTL header name, the second is the name in the SQLite database
 
 timeStamp = starttime_epoch  
 elapsed = responsetime  
