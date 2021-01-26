@@ -1,21 +1,21 @@
 # Database layout
 
-- id INTEGER PRIMARY KEY
-- name VARCHAR(40)
-- starttime_epoch REAL
-- stoptime_epoch REAL
-- responsetime REAL
-- user
-- type VARCHAR(10)
-- status
-- iteration INTEGER
-- cache INTEGER
-- vuser
-- extra
-- error
-- URL
-- response
-- runningvusers
+id INTEGER PRIMARY KEY  
+name VARCHAR(40)  
+starttime_epoch REAL  
+stoptime_epoch REAL  
+responsetime REAL  
+user  
+type VARCHAR(10)  
+status  
+iteration INTEGER  
+cache INTEGER  
+vuser  
+extra  
+error  
+URL  
+response  
+runningvusers  
 
 ```
 CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY ,name varchar(40), type varchar(10), starttime_epoch REAL, stoptime_epoch REAL, responsetime REAL, user, status, iteration INTEGER, cache INTEGER, vuser, extra, error)')
