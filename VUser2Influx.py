@@ -39,7 +39,7 @@ if (args.verbose):
     print("Dbport=%s" %(args.dbport))
     print("Dbname=%s" %(args.dbname))
     print("Dbdrop=%d" %(args.dbdrop))
-    print("JSON=%d" %(args.json))
+    
 
 # 
 #datapoints = []
