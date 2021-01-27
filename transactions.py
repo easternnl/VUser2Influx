@@ -38,7 +38,7 @@ def isinteger(value):
 class transactiontype:
     count = 0
 
-    def __init__(self, starttime_epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache, URL, response, runningvusers):
+    def __init__(self, starttime_epoch: int, stoptime_epoch: int , trans: str, user: str, resptime: float, status: str, iteration: int, vuser: str, extra: str, typetransaction: str, cache: int, URL: str, response: str, runningvusers: str):
         self.starttime_epoch = starttime_epoch
         self.stoptime_epoch = stoptime_epoch
         self.trans = trans
@@ -52,12 +52,12 @@ class transactiontype:
         self.cache = cache
         # added to new database on [2021-01-25 21:29:33 erik] 
         self.URL = URL 
-        self.response - response
+        self.response = response
         self.runningvusers = runningvusers
 
         transactiontype.count += 1
 
-    def ImportLogs(self,inputfilter):
+    def ImportLogs(self,inputfilter: str):
         # handle the import of an file based on the extension specified
 
         # not working yet due to incorrent self assignment
@@ -65,7 +65,7 @@ class transactiontype:
         transactions = []
 
         for filename in glob.glob(inputfilter):
-            #print("File: %s" % (filename))
+            print("File: %s" % (filename))
 
             extension = os.path.splitext(filename)[1]
 
@@ -96,8 +96,6 @@ class transactiontype:
         for filename in glob.glob(inputfilter):
             print("Importing JMeter with csv: %s" % (filename))
 
-           
-
             with open(filename) as fp:  
                 jtls = csv.DictReader(fp, delimiter=',', quotechar='"')
 
@@ -112,128 +110,100 @@ class transactiontype:
                     user=""
                     resptime=0
                     status=""
-                    iteration=""
+                    iteration=-1
                     vuser=""
                     extra=""
                     typetransaction=""
-                    cache=""
                     URL=""
                     response=""
                     runningvusers=""
 
                     for header in jtls.fieldnames: # walk through all columns in the line
-                        # default headers in JMeter are:
-                        #  timeStamp,
-                        #  elapsed,
-                        #  label,
-                        #  responseCode,
-                        #  responseMessage,
-                        #  threadName,
-                        #  dataType,
-                        #  success,
-                        #  failureMessage,
-                        #  bytes,
-                        #  sentBytes,
-                        #  grpThreads,
-                        #  allThreads,
-                        #  URL,
-                        #  Latency,
-                        #  IdleTime,
-                        #  Connect
+                        # default headers in JMeter JTL file are
                         #
-                        if header = "timeStamp":
+                        # timeStamp = starttime_epoch
+                        # elapsed = responsetime
+                        # label = name
+                        # responseCode = status
+                        # responseMessage = <response>
+                        # threadName = VUser
+                        # dataType = {SKIP}
+                        # success = status
+                        # failureMessage = error
+                        # bytes	={SKIP}
+                        # sentBytes = {SKIP}
+                        # grpThreads = {SKIP}
+                        # allThreads=<runningvusers>
+                        # URL = <URL>
+                        # Latency = {SKIP}
+                        # IdleTime = {SKIP}
+                        # Connect = {SKIP}
+                        #
+
+                        if header == "timeStamp":
                             starttime_epoch=float(jtl[header]) * 1000 * 1000
-                        elif header = "elapsed":
+                        elif header == "elapsed":
                             # double calculation
-                            starttime_epoch = epoch + (float(jtl[header]) * 1000 * 1000 )
+                            stoptime_epoch = starttime_epoch + (float(jtl[header]) * 1000 * 1000 )
                             resptime = float(float(jtl[header]) / 1000)
-                        elif header = "label":
+                        elif header == "label":
                             trans = jtl[header]
-                        elif header = "responseCode":
-                            if jtl[] 
-                        elif header = "responseMessage":
+                        elif header == "responseCode":
+                            status = jtl[header]
+                        elif header == "responseMessage":
                             response = jtl[header]
-                        elif header = "threadName":
+                        elif header == "threadName":
                             vuser = jtl[header]
-                        elif header = "dataType":
-                            # skip
-                        elif header = "success":
+                        elif header == "dataType":
+                            pass
+                        elif header == "success":
                             # status is converted from old LoadRunner starterd
                             if jtl[header] == "true":
                                 status = 2
                             else:
                                 status = 0
-                        elif header = "failureMessage":
+                        elif header == "failureMessage":
                             error = jtl[header]
-                        elif header = "bytes":
-                            # skip
-                        elif header = "sentBytes":
-                            # skip
-                        elif header = "grpThreads":
-                            # skip
-                        elif header = "allThreads":
+                        elif header == "bytes":
+                            pass
+                        elif header == "sentBytes":
+                            pass
+                        elif header == "grpThreads":
+                            pass
+                        elif header == "allThreads":
                             runningvusers = jtl[header]
-                        elif header = "URL":
+                        elif header == "URL":
                             URL = jtl[header]
-                        elif header = "Latency":
-                            # skip
-                        elif header = "IdleTime":
-                            # skip
-                        elif header = "Connect":
-                            # skip
+                        elif header == "Latency":                            
+                            pass
+                        elif header == "IdleTime":
+                            pass
+                        elif header == "Connect":
+                            pass
                         else:
-                            print("Unknown header %s" % (header))
-
-                        
-                        
+                            print("Unknown header %s" % (header))                        
                             
                     #transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
                     # multi line append ;-)
                     transactions.append(transactiontype(
-                        starttime_epoch=epoch,
+                        starttime_epoch=starttime_epoch,
                         stoptime_epoch=stoptime_epoch,
-                        trans=,
-                        user=,
-                        resptime=,
-                        status=,
-                        iteration=,
-                        vuser=,
-                        extra=,
-                        typetransaction=,
-                        cache=,
-                        URL=,
-                        response=,
-                        runningvusers=
+                        trans=trans,
+                        user="",
+                        resptime=resptime,
+                        status=status,
+                        iteration=0,
+                        vuser=vuser,
+                        extra="",
+                        typetransaction="transaction",
+                        cache=-1,
+                        URL=URL,
+                        response=response,
+                        runningvusers=runningvusers
                     ))
 
         return transactions
-                    
-                
-                 
-
-                    epoch = float(jmeter[0]) * 1000 * 1000 
-                    stoptime_epoch = epoch + (float(jmeter[1]) * 1000 * 1000 )
-                    #stoptime_epoch = 0
-                    trans = jmeter[2]
-                    user = ""
-                    resptime = float(float(jmeter[1]) / 1000)
-                    
-                    if jmeter[7] == "true":
-                        status = 2
-                    else:
-                        status = 0                        
-                    user = ""                   
-                    iteration = 0                    
-                    vuser = re.search(r'-([0-9]+)', jmeter[5])
-                    vuser = int(vuser.group(1))
-                    print(vuser)
-                    extra = ""
-                    typetransaction = "transaction"
-                    cache = 0
-
-                    transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
-
-        return transactions
+        
 
     def TikkerLog(inputfilter):
         transactions = []
@@ -276,9 +246,9 @@ class transactiontype:
 
         return transactions
 
-                    
-        
-        
+                
+    
+    
     def TruwebLog(inputfilter):
         
         transactions = []
@@ -444,7 +414,7 @@ class transactiontype:
             #print ("SQLite: %s" % (transaction.SqLite()))
             f.write(transaction.STT(header=0))            
 
-def Send2SQLite(self, filename, dropdatabase):
+    def Send2SQLite(self, filename, dropdatabase):
         # insert all the transactions into the SQLite database
         print("Send2SQLite: %s" % (filename))
 
@@ -456,24 +426,31 @@ def Send2SQLite(self, filename, dropdatabase):
             c.execute('DROP TABLE IF EXISTS transactions;')
 
         # setup the database with all default tables
-        c.execute('CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY ,name varchar(40), type varchar(10), starttime_epoch REAL, stoptime_epoch REAL, responsetime REAL, user, status, iteration INTEGER, cache INTEGER, vuser, extra, error)')
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS transactions
+            (id INTEGER PRIMARY KEY ,
+            name varchar(40), 
+            type varchar(10), 
+            starttime_epoch REAL, 
+            stoptime_epoch REAL, 
+            responsetime REAL, 
+            user, 
+            status, 
+            iteration INTEGER, 
+            cache INTEGER, 
+            vuser, 
+            extra, 
+            error)
+        ''')
 
         # setup the database with all default views
-        c.execute("CREATE VIEW IF NOT EXISTS _summary AS select name,percentile(responsetime, 95) as percentile95, avg(responsetime) as avg , max(responsetime) as max , min(responsetime) as min, count(responsetime) as count from alltransactions where type='transaction'  and responsetime > -1  group by name order by avg desc;")
-        c.execute("CREATE VIEW IF NOT EXISTS alltransactions as select id, name, type, datetime(starttime_epoch, 'unixepoch', 'localtime') as starttime,starttime_epoch, datetime(stoptime_epoch, 'unixepoch', 'localtime') as stoptime,stoptime_epoch,responsetime,user,status,iteration,vuser,cache,extra from transactions;")
-        c.execute("CREATE VIEW IF NOT EXISTS _faulty_transactions as select * from alltransactions where responsetime = -1;")
-        # create view for calculating responsetime	
-        c.execute("CREATE VIEW IF NOT EXISTS _calculatedresponsetime as select *, printf('%.3f', [stoptime_epoch] - [starttime_epoch])  as responsetimecalc from alltransactions;")
-        # create summary view with calculated responsetimes for using with LR 12.55 with TruClient Chromium - this version is not reporting response times in Javascript
-        c.execute("CREATE VIEW IF NOT EXISTS _summarycalculated as select name,percentile(responsetimecalc, 95) as percentile95, avg(responsetimecalc) as avg , max(responsetimecalc) as max , min(responsetimecalc) as min, count(responsetimecalc) as count from _calculatedresponsetime where type='transaction'  and responsetime > -1  group by name order by avg desc;")
-        c.execute("CREATE VIEW IF NOT EXISTS passed_failed_actions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case     when responsetime > -1 then 'Passed'    else null    end    )as Passed from alltransactions where type='action' group by name;")
-        c.execute("CREATE VIEW IF NOT EXISTS passed_failed_transactions as select name,   count(case     when responsetime = -1 then 'Failed'    else null    end    )as Failed,  count(case when responsetime > -1 then 'Passed'    else null    end    )as Passed from alltransactions where type='transaction' group by name;")
-        c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_actions AS select name, vuser, responsetime from alltransactions where  type ='action' group by vuser, name order by vuser, starttime;")
-        c.execute("CREATE VIEW IF NOT EXISTS responsetime_of_vuser as select vuser, sum(responsetime) as responsetime from alltransactions where type = 'transaction' group by vuser;")
-        c.execute("CREATE VIEW IF NOT EXISTS testduration as select datetime(min(starttime_epoch), 'unixepoch', 'localtime') as starttimetest, datetime(max(stoptime_epoch), 'unixepoch', 'localtime') as stoptimetest, max(stoptime_epoch) - min(starttime_epoch) as duration_seconds, (max(stoptime_epoch) - min(starttime_epoch)) / 60 as duration_minutes from alltransactions;")
 
-        c.execute("CREATE VIEW IF NOT EXISTS _summary_cache AS select name,extra,case cache when 1 then \"cached\" else \"1stvisit\" end as cache ,percentile(responsetime, 90) as percentile90, avg(responsetime) as avg , max(responsetime) as max , min(responsetime) as min, count(responsetime) as count from alltransactions where type='transaction'  and responsetime > -1  group by name,extra,cache order by name,extra,cache desc;")
+        # TODO import files views/*.sql and inject in database
 
+        # create all views
+        
+        
+        # create indexes
         c.execute("CREATE INDEX IF NOT EXISTS UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)")
 
         # insert all the transactions into the database
@@ -542,7 +519,7 @@ def Send2SQLite(self, filename, dropdatabase):
 
     def SqLite(self):
         # return SQL insert statement for the current transaction
-        return "INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra) VALUES ('%s', '%s', %.3f, %.3f,  %.3f, '%s', %d, %d, '%s', %d, '%s');" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
+        return "INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra) VALUES ('%s', '%s', %.3f, %.3f,  %.3f, '%s', %d, %d, '%s', '%s', '%s');" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
 
     def CSV(self, header):
         # return CSV values for current transaction
@@ -550,7 +527,7 @@ def Send2SQLite(self, filename, dropdatabase):
             return "name,type,starttime_epoch,stoptime_epoch,responsetime,user,iteration,status,vuser,extra\n"
         else:
             # name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, status, vuser, extra
-            return "%s,%s,%.3f,%.3f,%.3f,%s,%d,%d,%s,%d,%s\n" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch / 1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
+            return "%s,%s,%.3f,%.3f,%.3f,%s,%d,%d,%s,%s,%s\n" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch / 1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
     
     def STT(self, header):
         # return STTX values for current transaction
