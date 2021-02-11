@@ -1,0 +1,1 @@
+CREATE VIEW IF NOT EXISTS responsetime_of_actions AS select name, vuser, responsetime from alltransactions where  type ='action' group by vuser, name order by vuser, starttime;

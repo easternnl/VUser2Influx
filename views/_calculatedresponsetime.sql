@@ -1,0 +1,1 @@
+CREATE VIEW IF NOT EXISTS _calculatedresponsetime as select *, printf('%.3f', [stoptime_epoch] - [starttime_epoch])  as responsetimecalc from alltransactions;
