@@ -183,8 +183,6 @@ class transactiontype:
                         else:
                             print("Unknown header %s" % (header))                        
                             
-                    #transactions.append(transactiontype(epoch, stoptime_epoch, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
-                    # multi line append ;-)
                     transactions.append(transactiontype(
                         starttime_epoch=starttime_epoch,
                         stoptime_epoch=stoptime_epoch,
@@ -440,15 +438,27 @@ class transactiontype:
             cache INTEGER, 
             vuser, 
             extra, 
-            error)
+            error,
+            URL,  
+            response,  
+            runningvusers)
         ''')
 
         # setup the database with all default views
 
         # TODO import files views/*.sql and inject in database
+        print("Trying for views importing")
 
         # create all views
-        
+        for view in glob.glob("%s/views/*.sql" % (os.path.dirname(os.path.realpath(__file__)))):
+            print("Importing View: %s" % (view))
+
+            sql = open(view, 'r').read()
+
+            try:                
+                c.execute(sql)
+            except Exception as e:
+                print("Oops!", e.__class__, "occurred. When running %s" % (sql))
         
         # create indexes
         c.execute("CREATE INDEX IF NOT EXISTS UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)")
