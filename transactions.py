@@ -38,7 +38,7 @@ def isinteger(value):
 class transactiontype:
     count = 0
 
-    def __init__(self, starttime_epoch: int, stoptime_epoch: int , trans: str, user: str, resptime: float, status: str, iteration: int, vuser: str, extra: str, typetransaction: str, cache: int, URL: str, response: str, runningvusers: str):
+    def __init__(self, starttime_epoch: int, stoptime_epoch: int , trans: str, user: str, resptime: float, status: str, iteration: int, vuser: str, extra: str, typetransaction: str, cache: int, failmsg: str, URL: str, response: str, runningvusers: str):
         self.starttime_epoch = starttime_epoch
         self.stoptime_epoch = stoptime_epoch
         self.trans = trans
@@ -51,6 +51,7 @@ class transactiontype:
         self.type = typetransaction
         self.cache = cache
         # added to new database on [2021-01-25 21:29:33 erik] 
+        self.failmsg = failmsg
         self.URL = URL 
         self.response = response
         self.runningvusers = runningvusers
@@ -76,14 +77,15 @@ class transactiontype:
 
                 transactions += transactiontype.VUserLog(filename)
             elif extension == ".jtl":
-                print ("JMeter results - not finished yet (work in progress)")
+                print("JMeter JTL")
 
                 transactions += transactiontype.JMeterLog(filename)
             elif extension == ".tikker":               
+                print("Tikker log")
 
                 transactions += transactiontype.TikkerLog(filename)
             elif extension == ".db" or extension == ".db3":
-                #print ("SQLite for Truweb")
+                print ("SQLite for Truweb")
 
                 transactions += transactiontype.TruwebLog(filename)
 
@@ -114,6 +116,7 @@ class transactiontype:
                     vuser=""
                     extra=""
                     typetransaction=""
+                    failmsg=""
                     URL=""
                     response=""
                     runningvusers=""
@@ -129,7 +132,7 @@ class transactiontype:
                         # threadName = VUser
                         # dataType = {SKIP}
                         # success = status
-                        # failureMessage = error
+                        # failureMessage = failmsg
                         # bytes	={SKIP}
                         # sentBytes = {SKIP}
                         # grpThreads = {SKIP}
@@ -157,13 +160,15 @@ class transactiontype:
                         elif header == "dataType":
                             pass
                         elif header == "success":
+                            pass
                             # status is converted from old LoadRunner starterd
-                            if jtl[header] == "true":
-                                status = 2
-                            else:
-                                status = 0
+                            #if jtl[header] == "true":
+                            #    status = 2
+                            #
+                            # else:
+                            #    status = 0
                         elif header == "failureMessage":
-                            error = jtl[header]
+                            failmsg = jtl[header]
                         elif header == "bytes":
                             pass
                         elif header == "sentBytes":
@@ -195,6 +200,7 @@ class transactiontype:
                         extra="",
                         typetransaction="transaction",
                         cache=-1,
+                        failmsg=failmsg,
                         URL=URL,
                         response=response,
                         runningvusers=runningvusers
@@ -338,9 +344,9 @@ class transactiontype:
                             elif key == "status":
                                 status = value
                                 if (status == "Passed"):
-                                    status = 2
+                                    status = 200
                                 elif (status == "Auto"):
-                                    status = 2
+                                    status = 200
                             elif key == "iteration":
                                 iteration = float(value)
                             elif key == "vuser":
@@ -358,7 +364,26 @@ class transactiontype:
                             # print("OPEN epoch=%d trans=%s user=%s resptime=%s status=%s iteration=%s vuser=%s extra=%s" % (epoch, trans, user, resptime, status, iteration, vuser, extra))
                             #print("OPEN epoch=%d trans=%s user=%s resptime=%f status=%s iteration=%s vuser=%s extra=%s" % (epoch, trans, user, resptime, status, iteration, vuser, extra))
 
-                            transactions.append(transactiontype(epoch, 0, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
+                            #[2021-02-16 08:16:39 erik]  replace by new edition
+                            # transactions.append(transactiontype(epoch, 0, trans, user, resptime, status, iteration, vuser, extra, typetransaction, cache))
+
+                            transactions.append(transactiontype(
+                                starttime_epoch=epoch,
+                                stoptime_epoch=0,
+                                trans=trans,
+                                user=user,
+                                resptime=resptime,
+                                status=status,
+                                iteration=iteration,
+                                vuser=vuser,
+                                extra=extra,
+                                typetransaction=typetransaction,
+                                cache=cache,
+                                failmsg="",
+                                URL="",
+                                response="",
+                                runningvusers=""
+                            ))
                                                         
                             
                         elif resptime > 0 and trans:
@@ -438,7 +463,7 @@ class transactiontype:
             cache INTEGER, 
             vuser, 
             extra, 
-            error,
+            failmsg,
             URL,  
             response,  
             runningvusers)
@@ -461,12 +486,13 @@ class transactiontype:
                 print("Oops!", e.__class__, "occurred. When running %s" % (sql))
         
         # create indexes
-        c.execute("CREATE INDEX IF NOT EXISTS UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)")
+        #c.execute("CREATE INDEX IF NOT EXISTS UpdateQueryLRLogs ON transactions(name, user, vuser, iteration, stoptime_epoch)")
 
         # insert all the transactions into the database
         for transaction in self:            
             #print ("SQLite: %s" % (transaction.SqLite()))
-            c.execute(transaction.SqLite())
+            # OLD c.execute(transaction.SqLite())
+            transaction.Sqlite2(cursor = c)
             
         # Save (commit) the changes
         conn.commit()
@@ -530,6 +556,18 @@ class transactiontype:
     def SqLite(self):
         # return SQL insert statement for the current transaction
         return "INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra) VALUES ('%s', '%s', %.3f, %.3f,  %.3f, '%s', %d, %d, '%s', '%s', '%s');" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
+
+    def Sqlite2(self, cursor):
+        sql = """
+        INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra, failmsg, URL, response, runningvusers) 
+        VALUES                  (?   , ?   , ?              , ?             , ?           , ?   , ?        , ?    , ?     , ?    , ?    , ?    , ?  , ?       , ?            )
+        """
+
+        cursor.execute(sql, [self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra, self.failmsg, self.URL, self.response, self.runningvusers])
+
+        return
+
+
 
     def CSV(self, header):
         # return CSV values for current transaction
