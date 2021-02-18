@@ -558,12 +558,13 @@ class transactiontype:
         return "INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra) VALUES ('%s', '%s', %.3f, %.3f,  %.3f, '%s', %d, %d, '%s', '%s', '%s');" % (self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra)
 
     def Sqlite2(self, cursor):
-        sql = """
-        INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra, failmsg, URL, response, runningvusers) 
-        VALUES                  (?   , ?   , ?              , ?             , ?           , ?   , ?        , ?    , ?     , ?    , ?    , ?    , ?  , ?       , ?            )
-        """
+        if not "#" in self.trans:
+            sql = """
+            INSERT INTO Transactions(name, type, starttime_epoch, stoptime_epoch, responsetime, user, iteration, cache, status, vuser, extra, failmsg, URL, response, runningvusers) 
+            VALUES                  (?   , ?   , ?              , ?             , ?           , ?   , ?        , ?    , ?     , ?    , ?    , ?    , ?  , ?       , ?            )
+            """
 
-        cursor.execute(sql, [self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra, self.failmsg, self.URL, self.response, self.runningvusers])
+            cursor.execute(sql, [self.trans, self.type, self.starttime_epoch / 1000000000, self.stoptime_epoch /1000000000 , self.resptime, self.user, self.iteration, self.cache, self.status, self.vuser, self.extra, self.failmsg, self.URL, self.response, self.runningvusers])
 
         return
 
